@@ -1,0 +1,2144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Threadweave — String Art Studio</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,800;9..144,900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  :root {
+    --bg: #0d0c0a;
+    --bg-2: #100e0b;
+    --surface: #16140f;
+    --surface-2: #1f1c16;
+    --surface-3: #25211a;
+    --border: #2c2820;
+    --border-strong: #3a3527;
+    --text: #f0ebe0;
+    --text-dim: #c9c2b3;
+    --muted: #8a8275;
+    --muted-2: #5d574c;
+    --accent: #d97757;
+    --accent-hover: #e58566;
+    --accent-2: #e0a458;
+    --accent-soft: rgba(217, 119, 87, 0.12);
+    --success: #7fb069;
+    --danger: #c95d4a;
+    --warn: #e0a458;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body {
+    background:
+      radial-gradient(ellipse 1000px 700px at 85% -10%, rgba(217, 119, 87, 0.10), transparent 55%),
+      radial-gradient(ellipse 800px 500px at -10% 110%, rgba(224, 164, 88, 0.07), transparent 55%),
+      radial-gradient(ellipse 600px 400px at 50% 50%, rgba(217, 119, 87, 0.02), transparent 70%),
+      var(--bg);
+  }
+
+  .font-display { font-family: 'Fraunces', serif; }
+
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
+
+  .slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 4px;
+    background: var(--surface-3);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    background: var(--accent);
+    border-radius: 50%;
+    cursor: pointer;
+    border: 3px solid var(--bg);
+    box-shadow: 0 0 0 1px var(--accent);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .slider::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+    box-shadow: 0 0 0 1px var(--accent), 0 0 12px rgba(217, 119, 87, 0.6);
+  }
+  .slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    background: var(--accent);
+    border-radius: 50%;
+    cursor: pointer;
+    border: 3px solid var(--bg);
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+  .slider:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent) 0%, #c4664a 100%);
+    color: white;
+    font-weight: 600;
+    padding: 0.875rem 1.5rem;
+    border-radius: 10px;
+    transition: all 0.2s;
+    box-shadow: 0 4px 14px rgba(217, 119, 87, 0.3), inset 0 1px 0 rgba(255,255,255,0.15);
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.95rem;
+    letter-spacing: 0.01em;
+  }
+  .btn-primary:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 22px rgba(217, 119, 87, 0.45), inset 0 1px 0 rgba(255,255,255,0.2);
+  }
+  .btn-primary:active:not(:disabled) { transform: translateY(0); }
+  .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; filter: saturate(0.5); }
+
+  .btn-ghost {
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 0.5rem 0.9rem;
+    border-radius: 8px;
+    transition: all 0.2s;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .btn-ghost:hover:not(:disabled) {
+    background: var(--surface-3);
+    border-color: var(--border-strong);
+    color: var(--accent-2);
+  }
+  .btn-ghost:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+  }
+
+  .tab {
+    padding: 0.5rem 1rem;
+    color: var(--muted);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border: 1px solid transparent;
+  }
+  .tab:hover { color: var(--text-dim); }
+  .tab.active {
+    background: var(--surface-2);
+    color: var(--accent-2);
+    border-color: var(--border);
+  }
+  .tab:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .drop-zone {
+    border: 2px dashed var(--border-strong);
+    border-radius: 12px;
+    padding: 1.75rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s;
+    background: var(--surface);
+  }
+  .drop-zone:hover, .drop-zone.dragover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    transform: translateY(-1px);
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+  @keyframes shimmer { 0% { background-position: -800px 0; } 100% { background-position: 800px 0; } }
+  @keyframes float-up { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes glow-pulse {
+    0%, 100% { box-shadow: 0 0 20px rgba(217, 119, 87, 0.3); }
+    50% { box-shadow: 0 0 35px rgba(217, 119, 87, 0.55); }
+  }
+  .spin { animation: spin 0.8s linear infinite; }
+  .pulse-soft { animation: pulse-soft 1.8s ease-in-out infinite; }
+  .float-up { animation: float-up 0.4s ease-out; }
+
+  .progress-bar {
+    height: 5px;
+    background: var(--surface-3);
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    transition: width 0.2s ease-out;
+    border-radius: 3px;
+    position: relative;
+  }
+  .progress-fill::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    background-size: 200px 100%;
+    animation: shimmer 1.5s linear infinite;
+  }
+
+  .stage-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--border-strong);
+    transition: all 0.3s;
+  }
+  .stage-dot.active { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+  .stage-dot.done { background: var(--success); }
+
+  .preview-area {
+    background:
+      radial-gradient(circle at 25% 25%, rgba(217, 119, 87, 0.04), transparent 45%),
+      radial-gradient(circle at 75% 75%, rgba(224, 164, 88, 0.04), transparent 45%),
+      var(--bg-2);
+    position: relative;
+  }
+  .preview-area::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px);
+    background-size: 32px 32px;
+    pointer-events: none;
+  }
+
+  .modal-backdrop {
+    backdrop-filter: blur(12px);
+    background: rgba(13, 12, 10, 0.78);
+  }
+
+  .num-input {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.35rem 0.6rem;
+    border-radius: 6px;
+    width: 100%;
+    font-family: inherit;
+    font-size: 0.825rem;
+    transition: border-color 0.15s;
+  }
+  .num-input:focus { outline: none; border-color: var(--accent); }
+
+  .toggle {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    background: var(--surface-3);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.2s;
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    background: var(--muted);
+    border-radius: 50%;
+    transition: all 0.2s;
+  }
+  .toggle.on { background: var(--accent-soft); border-color: var(--accent); }
+  .toggle.on::after { left: 18px; background: var(--accent); }
+
+  .thumb-canvas {
+    background:
+      linear-gradient(45deg, var(--surface-2) 25%, transparent 25%),
+      linear-gradient(-45deg, var(--surface-2) 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, var(--surface-2) 75%),
+      linear-gradient(-45deg, transparent 75%, var(--surface-2) 75%);
+    background-size: 12px 12px;
+    background-position: 0 0, 0 6px, 6px -6px, -6px 0px;
+    background-color: var(--surface);
+  }
+
+  .toast {
+    animation: float-up 0.3s ease-out;
+  }
+
+  .icon-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 7px;
+    color: var(--muted);
+    transition: all 0.15s;
+    cursor: pointer;
+  }
+  .icon-btn:hover { color: var(--accent-2); background: var(--surface-2); }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .guideline-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.1rem;
+    transition: all 0.2s;
+  }
+  .guideline-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+
+  .section-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+  }
+
+  .stat-block {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.65rem 0.8rem;
+  }
+
+  .generating-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(13, 12, 10, 0.85);
+    backdrop-filter: blur(6px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+
+  .color-swatch {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 2px solid var(--border);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .color-swatch:hover { transform: scale(1.1); }
+  .color-swatch.selected { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(217, 119, 87, 0.3); }
+
+  /* Mobile responsive */
+  @media (max-width: 1024px) {
+    .main-grid {
+      grid-template-columns: 1fr !important;
+      grid-template-rows: auto 1fr !important;
+    }
+    .sidebar {
+      max-height: 50vh;
+      border-right: none !important;
+      border-bottom: 1px solid var(--border);
+    }
+  }
+
+  .reduced-motion * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="border-b border-[var(--border)] backdrop-blur-md bg-[rgba(13,12,10,0.85)] sticky top-0 z-30">
+  <div class="px-5 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="relative w-10 h-10 flex items-center justify-center rounded-xl bg-gradient-to-br from-[var(--accent)] to-[#a04428] shadow-lg shadow-[rgba(217,119,87,0.3)]">
+        <svg viewBox="0 0 24 24" class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <circle cx="12" cy="12" r="9" opacity="0.4"/>
+          <path d="M12 3 L21 12 L12 21 L3 12 Z" opacity="0.7"/>
+          <path d="M5 8 L19 16 M19 8 L5 16 M12 3 L12 21 M3 12 L21 12" opacity="0.9"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="font-display font-semibold text-lg leading-none tracking-tight">Threadweave</h1>
+        <p class="text-[0.7rem] text-[var(--muted)] mt-1 tracking-wider uppercase">String Art Studio</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <div id="stage-indicators" class="hidden md:flex items-center gap-1.5 mr-3">
+        <span class="stage-dot" data-stage="1"></span>
+        <span class="text-[var(--muted-2)] text-xs">·</span>
+        <span class="stage-dot" data-stage="2"></span>
+        <span class="text-[var(--muted-2)] text-xs">·</span>
+        <span class="stage-dot" data-stage="3"></span>
+        <span class="text-[var(--muted-2)] text-xs">·</span>
+        <span class="stage-dot" data-stage="4"></span>
+      </div>
+      <button id="btn-export-txt" class="btn-ghost" disabled>
+        <i class="fa-regular fa-file-lines mr-1.5"></i>TXT
+      </button>
+      <button id="btn-export-json" class="btn-ghost" disabled>
+        <i class="fa-regular fa-file-code mr-1.5"></i>JSON
+      </button>
+      <button id="btn-export-svg" class="btn-ghost" disabled>
+        <i class="fa-solid fa-bezier-curve mr-1.5"></i>SVG
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main class="main-grid grid grid-cols-[380px_1fr] h-[calc(100vh-65px)]">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar border-r border-[var(--border)] overflow-y-auto bg-[var(--bg-2)]">
+
+    <!-- Section: Image Source -->
+    <section class="p-5 border-b border-[var(--border)]">
+      <div class="flex items-center justify-between mb-3">
+        <span class="section-title">01 · Image Source</span>
+        <span id="source-status" class="badge" style="background: var(--surface-2); color: var(--muted);">Empty</span>
+      </div>
+
+      <div id="upload-area">
+        <div id="drop-zone" class="drop-zone">
+          <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-[var(--surface-2)] flex items-center justify-center">
+            <i class="fa-solid fa-cloud-arrow-up text-xl text-[var(--accent)]"></i>
+          </div>
+          <p class="text-sm font-medium mb-1">Drop image here</p>
+          <p class="text-xs text-[var(--muted)] mb-3">or click to browse</p>
+          <button id="btn-browse" class="text-xs text-[var(--accent-2)] font-semibold hover:underline">
+            Choose File
+          </button>
+          <input type="file" id="file-input" accept="image/*" class="hidden">
+        </div>
+        <button id="btn-guidelines" class="w-full mt-3 text-xs text-[var(--muted)] hover:text-[var(--accent-2)] transition flex items-center justify-center gap-1.5">
+          <i class="fa-regular fa-circle-question"></i>
+          What makes a good string art image?
+        </button>
+      </div>
+
+      <div id="source-loaded" class="hidden">
+        <div class="flex gap-3 items-start">
+          <div class="thumb-canvas w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 border border-[var(--border)]">
+            <canvas id="source-thumb" width="80" height="80" class="w-full h-full"></canvas>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p id="source-name" class="text-sm font-medium truncate">image.jpg</p>
+            <p id="source-dims" class="text-xs text-[var(--muted)] mt-0.5">— × —</p>
+            <div class="mt-2 flex items-center gap-2">
+              <span id="sharpness-badge" class="badge"></span>
+              <button id="btn-replace" class="text-xs text-[var(--accent-2)] hover:underline ml-auto">Replace</button>
+            </div>
+          </div>
+        </div>
+        <div id="blur-warning" class="hidden mt-3 p-2.5 rounded-lg bg-[rgba(224,164,88,0.08)] border border-[rgba(224,164,88,0.25)] text-xs text-[var(--warn)] flex items-start gap-2">
+          <i class="fa-solid fa-triangle-exclamation mt-0.5"></i>
+          <div>
+            <p class="font-semibold">Low sharpness detected</p>
+            <p class="opacity-80 mt-0.5">Result may be soft. Try a sharper image or proceed anyway.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section: Image Adjustments -->
+    <section class="p-5 border-b border-[var(--border)]">
+      <div class="flex items-center justify-between mb-3">
+        <span class="section-title">02 · Adjustments</span>
+        <button id="btn-reset-adjust" class="text-xs text-[var(--muted)] hover:text-[var(--accent-2)] transition disabled:opacity-40" disabled>Reset</button>
+      </div>
+
+      <div class="space-y-4 opacity-40 pointer-events-none transition-opacity" id="adjust-controls">
+        <div>
+          <div class="flex justify-between text-xs mb-1.5">
+            <span class="text-[var(--text-dim)]">Zoom</span>
+            <span id="val-zoom" class="text-[var(--accent-2)] font-mono">1.00×</span>
+          </div>
+          <input type="range" id="adj-zoom" class="slider" min="1" max="3" step="0.05" value="1">
+        </div>
+        <div>
+          <div class="flex justify-between text-xs mb-1.5">
+            <span class="text-[var(--text-dim)]">Brightness</span>
+            <span id="val-brightness" class="text-[var(--accent-2)] font-mono">0</span>
+          </div>
+          <input type="range" id="adj-brightness" class="slider" min="-100" max="100" step="1" value="0">
+        </div>
+        <div>
+          <div class="flex justify-between text-xs mb-1.5">
+            <span class="text-[var(--text-dim)]">Contrast</span>
+            <span id="val-contrast" class="text-[var(--accent-2)] font-mono">0</span>
+          </div>
+          <input type="range" id="adj-contrast" class="slider" min="-100" max="100" step="1" value="0">
+        </div>
+        <div>
+          <div class="flex justify-between text-xs mb-1.5">
+            <span class="text-[var(--text-dim)]">Threshold (B&W)</span>
+            <span id="val-threshold" class="text-[var(--accent-2)] font-mono">Off</span>
+          </div>
+          <input type="range" id="adj-threshold" class="slider" min="-1" max="255" step="1" value="-1">
+          <p class="text-[0.7rem] text-[var(--muted)] mt-1">Set above 0 to convert to high-contrast B&W</p>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-[var(--text-dim)]">Invert colors</span>
+          <div id="adj-invert" class="toggle" role="switch" aria-checked="false" tabindex="0"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section: String Art Settings -->
+    <section class="p-5 border-b border-[var(--border)]">
+      <div class="flex items-center justify-between mb-3">
+        <span class="section-title">03 · String Settings</span>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <div class="flex justify-between text-xs mb-1.5">
+            <span class="text-[var(--text-dim)]">Nail count</span>
+            <span id="val-nails" class="text-[var(--accent-2)] font-mono">200</span>
+          </div>
+          <input type="range" id="set-nails" class="slider" min="60" max="400" step="2" value="200">
+          <p class="text-[0.7rem] text-[var(--muted)] mt-1">More nails = finer detail, longer generation</p>
+        </div>
+
+        <div>
+          <div class="flex justify-between text-xs mb-1.5">
+            <span class="text-[var(--text-dim)]">String count</span>
+            <span id="val-strings" class="text-[var(--accent-2)] font-mono">2500</span>
+          </div>
+          <input type="range" id="set-strings" class="slider" min="500" max="8000" step="50" value="2500">
+          <p class="text-[0.7rem] text-[var(--muted)] mt-1">Total lines to draw</p>
+        </div>
+
+        <div>
+          <div class="flex justify-between text-xs mb-1.5">
+            <span class="text-[var(--text-dim)]">Line opacity</span>
+            <span id="val-lineopacity" class="text-[var(--accent-2)] font-mono">0.12</span>
+          </div>
+          <input type="range" id="set-lineopacity" class="slider" min="0.04" max="0.30" step="0.01" value="0.12">
+          <p class="text-[0.7rem] text-[var(--muted)] mt-1">Darkness contribution per line</p>
+        </div>
+
+        <div>
+          <div class="flex justify-between text-xs mb-1.5">
+            <span class="text-[var(--text-dim)]">Display line width</span>
+            <span id="val-linewidth" class="text-[var(--accent-2)] font-mono">1.0 px</span>
+          </div>
+          <input type="range" id="set-linewidth" class="slider" min="0.4" max="3" step="0.1" value="1.0">
+        </div>
+
+        <div>
+          <div class="flex justify-between text-xs mb-1.5">
+            <span class="text-[var(--text-dim)]">Contrast boost</span>
+            <span id="val-contrastboost" class="text-[var(--accent-2)] font-mono">1.20×</span>
+          </div>
+          <input type="range" id="set-contrastboost" class="slider" min="0.5" max="2.5" step="0.05" value="1.2">
+          <p class="text-[0.7rem] text-[var(--muted)] mt-1">Amplify dark areas before generating</p>
+        </div>
+
+        <div>
+          <div class="flex justify-between text-xs mb-1.5">
+            <span class="text-[var(--text-dim)]">Min line spacing</span>
+            <span id="val-spacing" class="text-[var(--accent-2)] font-mono">10 nails</span>
+          </div>
+          <input type="range" id="set-spacing" class="slider" min="1" max="30" step="1" value="10">
+          <p class="text-[0.7rem] text-[var(--muted)] mt-1">Avoid lines between adjacent nails</p>
+        </div>
+
+        <div>
+          <p class="text-xs text-[var(--text-dim)] mb-2">Theme</p>
+          <div class="flex gap-2 flex-wrap">
+            <div class="color-swatch selected" data-bg="#1a1813" data-line="#e8dcc4" style="background: #1a1813; border-color: #e8dcc4;" title="Warm dark"></div>
+            <div class="color-swatch" data-bg="#0a0a0a" data-line="#f5f5f5" style="background: #0a0a0a; border-color: #f5f5f5;" title="Classic"></div>
+            <div class="color-swatch" data-bg="#f5efe0" data-line="#1a1813" style="background: #f5efe0; border-color: #1a1813;" title="Cream"></div>
+            <div class="color-swatch" data-bg="#ffffff" data-line="#000000" style="background: #ffffff; border-color: #000000;" title="Paper"></div>
+            <div class="color-swatch" data-bg="#1a2330" data-line="#c9d4e5" style="background: #1a2330; border-color: #c9d4e5;" title="Cool dark"></div>
+            <div class="color-swatch" data-bg="#2d1f2a" data-line="#e5c9d4" style="background: #2d1f2a; border-color: #e5c9d4;" title="Plum"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section: Generate -->
+    <section class="p-5">
+      <button id="btn-generate" class="btn-primary w-full" disabled>
+        <i class="fa-solid fa-play mr-2"></i>
+        <span id="btn-generate-text">Generate String Art</span>
+      </button>
+
+      <div id="gen-progress" class="hidden mt-4">
+        <div class="flex justify-between text-xs mb-2">
+          <span class="text-[var(--text-dim)]">Weaving threads…</span>
+          <span id="gen-percent" class="text-[var(--accent-2)] font-mono">0%</span>
+        </div>
+        <div class="progress-bar">
+          <div id="gen-fill" class="progress-fill" style="width: 0%"></div>
+        </div>
+        <div class="flex justify-between text-[0.7rem] text-[var(--muted)] mt-2">
+          <span id="gen-step">Step 0 / 0</span>
+          <span id="gen-time"></span>
+        </div>
+        <button id="btn-cancel" class="w-full mt-3 text-xs text-[var(--danger)] hover:underline">
+          Cancel generation
+        </button>
+      </div>
+
+      <div id="result-summary" class="hidden mt-4 space-y-2">
+        <div class="grid grid-cols-2 gap-2">
+          <div class="stat-block">
+            <p class="text-[0.65rem] text-[var(--muted)] uppercase tracking-wider">Strings</p>
+            <p id="stat-strings" class="font-display font-semibold text-lg mt-0.5">—</p>
+          </div>
+          <div class="stat-block">
+            <p class="text-[0.65rem] text-[var(--muted)] uppercase tracking-wider">Nails</p>
+            <p id="stat-nails" class="font-display font-semibold text-lg mt-0.5">—</p>
+          </div>
+          <div class="stat-block">
+            <p class="text-[0.65rem] text-[var(--muted)] uppercase tracking-wider">Coverage</p>
+            <p id="stat-coverage" class="font-display font-semibold text-lg mt-0.5">—</p>
+          </div>
+          <div class="stat-block">
+            <p class="text-[0.65rem] text-[var(--muted)] uppercase tracking-wider">Length</p>
+            <p id="stat-length" class="font-display font-semibold text-lg mt-0.5">—</p>
+          </div>
+        </div>
+        <div class="stat-block">
+          <label class="text-[0.65rem] text-[var(--muted)] uppercase tracking-wider">Canvas diameter</label>
+          <div class="flex items-center gap-2 mt-1">
+            <input type="number" id="canvas-size" value="50" min="10" max="200" class="num-input flex-1">
+            <span class="text-xs text-[var(--muted)]">cm</span>
+            <span class="text-xs text-[var(--accent-2)] ml-auto" id="string-estimate">≈ — m</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </aside>
+
+  <!-- PREVIEW -->
+  <section class="preview-area flex flex-col">
+    <!-- Tabs bar -->
+    <div class="px-6 py-3 flex items-center justify-between border-b border-[var(--border)] bg-[rgba(13,12,10,0.4)] relative z-10">
+      <div class="flex items-center gap-1">
+        <button class="tab active" data-view="original">Original</button>
+        <button class="tab" data-view="adjusted" disabled>Adjusted</button>
+        <button class="tab" data-view="result" disabled>Result</button>
+        <button class="tab" data-view="overlay" disabled>Overlay</button>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="btn-zoom-fit" class="icon-btn" title="Fit to screen">
+          <i class="fa-solid fa-expand"></i>
+        </button>
+        <button id="btn-download-png" class="btn-ghost" disabled>
+          <i class="fa-regular fa-image mr-1.5"></i>PNG
+        </button>
+      </div>
+    </div>
+
+    <!-- Overlay slider -->
+    <div id="overlay-controls" class="hidden px-6 py-3 border-b border-[var(--border)] bg-[rgba(13,12,10,0.4)]">
+      <div class="flex items-center gap-3">
+        <span class="text-xs text-[var(--muted)] w-16">Original</span>
+        <input type="range" id="overlay-slider" class="slider flex-1" min="0" max="100" step="1" value="50">
+        <span class="text-xs text-[var(--muted)] w-12 text-right">Result</span>
+      </div>
+    </div>
+
+    <!-- Canvas area -->
+    <div class="flex-1 flex items-center justify-center p-6 relative overflow-hidden" id="canvas-stage">
+      <!-- Empty state -->
+      <div id="empty-state" class="text-center max-w-md">
+        <div class="relative w-32 h-32 mx-auto mb-6">
+          <div class="absolute inset-0 rounded-full bg-[var(--accent-soft)] pulse-soft"></div>
+          <div class="absolute inset-4 rounded-full border-2 border-dashed border-[var(--border-strong)] flex items-center justify-center">
+            <i class="fa-solid fa-image text-3xl text-[var(--muted-2)]"></i>
+          </div>
+          <!-- Decorative threads -->
+          <svg class="absolute inset-0 w-full h-full opacity-30" viewBox="0 0 128 128">
+            <line x1="64" y1="8" x2="64" y2="120" stroke="var(--accent)" stroke-width="0.5"/>
+            <line x1="8" y1="64" x2="120" y2="64" stroke="var(--accent)" stroke-width="0.5"/>
+            <line x1="22" y1="22" x2="106" y2="106" stroke="var(--accent)" stroke-width="0.5"/>
+            <line x1="106" y1="22" x2="22" y2="106" stroke="var(--accent)" stroke-width="0.5"/>
+          </svg>
+        </div>
+        <h2 class="font-display text-2xl font-semibold mb-2">Begin your string art</h2>
+        <p class="text-sm text-[var(--muted)] leading-relaxed">
+          Upload an image, fine-tune the parameters, and watch thousands of threads weave into a portrait — all in your browser.
+        </p>
+        <button id="btn-empty-upload" class="btn-primary mt-5">
+          <i class="fa-solid fa-upload mr-2"></i>Upload Image
+        </button>
+      </div>
+
+      <!-- Original image view -->
+      <div id="original-view" class="hidden w-full h-full flex items-center justify-center">
+        <div class="relative max-w-full max-h-full">
+          <canvas id="canvas-original" class="max-w-full max-h-[70vh] rounded-lg shadow-2xl"></canvas>
+        </div>
+      </div>
+
+      <!-- Adjusted view -->
+      <div id="adjusted-view" class="hidden w-full h-full flex items-center justify-center">
+        <div class="relative max-w-full max-h-full">
+          <canvas id="canvas-adjusted" class="max-w-full max-h-[70vh] rounded-lg shadow-2xl"></canvas>
+          <div class="absolute top-3 left-3 flex gap-2">
+            <span class="badge bg-[rgba(13,12,10,0.8)] text-[var(--accent-2)] backdrop-blur-sm">
+              <i class="fa-solid fa-sliders text-[0.6rem]"></i>Preview
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Result view -->
+      <div id="result-view" class="hidden w-full h-full flex items-center justify-center">
+        <div class="relative max-w-full max-h-full">
+          <canvas id="canvas-result" class="max-w-full max-h-[70vh] rounded-lg shadow-2xl"></canvas>
+          <div class="absolute top-3 left-3 flex gap-2">
+            <span class="badge bg-[rgba(13,12,10,0.8)] text-[var(--accent-2)] backdrop-blur-sm">
+              <i class="fa-solid fa-check text-[0.6rem]"></i>String Art
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Overlay view -->
+      <div id="overlay-view" class="hidden w-full h-full flex items-center justify-center">
+        <div class="relative max-w-full max-h-full">
+          <canvas id="canvas-overlay" class="max-w-full max-h-[70vh] rounded-lg shadow-2xl"></canvas>
+        </div>
+      </div>
+
+      <!-- Generating overlay -->
+      <div id="generating-overlay" class="hidden generating-overlay">
+        <div class="text-center">
+          <div class="relative w-20 h-20 mx-auto mb-5">
+            <svg class="spin" viewBox="0 0 80 80">
+              <circle cx="40" cy="40" r="36" fill="none" stroke="var(--surface-3)" stroke-width="2"/>
+              <circle cx="40" cy="40" r="36" fill="none" stroke="var(--accent)" stroke-width="2" stroke-dasharray="40 200" stroke-linecap="round"/>
+            </svg>
+            <div class="absolute inset-0 flex items-center justify-center">
+              <i class="fa-solid fa-thread text-[var(--accent)] text-xl"></i>
+            </div>
+          </div>
+          <h3 class="font-display text-xl font-semibold mb-1">Weaving threads</h3>
+          <p id="gen-status-text" class="text-sm text-[var(--muted)]">Initializing…</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom info bar -->
+    <div class="px-6 py-3 border-t border-[var(--border)] bg-[rgba(13,12,10,0.5)] flex items-center justify-between text-xs">
+      <div class="flex items-center gap-4 text-[var(--muted)]">
+        <span><i class="fa-regular fa-image mr-1.5"></i><span id="info-dims">No image</span></span>
+        <span class="text-[var(--muted-2)]">·</span>
+        <span><i class="fa-solid fa-bullseye mr-1.5"></i><span id="info-sharpness">— sharpness</span></span>
+      </div>
+      <div class="flex items-center gap-3 text-[var(--muted)]">
+        <span id="info-status">Ready</span>
+        <span class="w-2 h-2 rounded-full bg-[var(--success)] pulse-soft"></span>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- GUIDELINES MODAL -->
+<div id="guidelines-modal" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4">
+  <div class="panel max-w-2xl w-full max-h-[90vh] overflow-y-auto float-up">
+    <div class="p-6 border-b border-[var(--border)] flex items-start justify-between">
+      <div>
+        <span class="badge mb-2" style="background: var(--accent-soft); color: var(--accent-2);">
+          <i class="fa-regular fa-lightbulb text-[0.6rem]"></i>Best Practices
+        </span>
+        <h2 class="font-display text-2xl font-semibold mt-1">Choosing the right image</h2>
+        <p class="text-sm text-[var(--muted)] mt-1">String art thrives on contrast and clarity. Here's what works best.</p>
+      </div>
+      <button id="close-guidelines" class="icon-btn">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="p-6 space-y-5">
+      <div class="grid grid-cols-3 gap-3">
+        <div class="guideline-card text-center">
+          <div class="w-10 h-10 mx-auto mb-2 rounded-full bg-[var(--accent-soft)] flex items-center justify-center">
+            <i class="fa-solid fa-user text-[var(--accent-2)]"></i>
+          </div>
+          <p class="text-xs font-semibold">Portraits</p>
+          <p class="text-[0.7rem] text-[var(--muted)] mt-1">Faces with strong lighting</p>
+        </div>
+        <div class="guideline-card text-center">
+          <div class="w-10 h-10 mx-auto mb-2 rounded-full bg-[var(--accent-soft)] flex items-center justify-center">
+            <i class="fa-solid fa-paw text-[var(--accent-2)]"></i>
+          </div>
+          <p class="text-xs font-semibold">Silhouettes</p>
+          <p class="text-[0.7rem] text-[var(--muted)] mt-1">Single clear subjects</p>
+        </div>
+        <div class="guideline-card text-center">
+          <div class="w-10 h-10 mx-auto mb-2 rounded-full bg-[var(--accent-soft)] flex items-center justify-center">
+            <i class="fa-solid fa-shield-halved text-[var(--accent-2)]"></i>
+          </div>
+          <p class="text-xs font-semibold">Logos</p>
+          <p class="text-[0.7rem] text-[var(--muted)] mt-1">Bold simple shapes</p>
+        </div>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <div class="space-y-2">
+          <h3 class="text-sm font-semibold text-[var(--success)] flex items-center gap-2">
+            <i class="fa-solid fa-circle-check"></i>What works well
+          </h3>
+          <ul class="text-xs text-[var(--text-dim)] space-y-1.5 leading-relaxed">
+            <li class="flex gap-2"><span class="text-[var(--accent-2)]">›</span>High contrast between subject and background</li>
+            <li class="flex gap-2"><span class="text-[var(--accent-2)]">›</span>Minimum 600×600 pixels</li>
+            <li class="flex gap-2"><span class="text-[var(--accent-2)]">›</span>Sharp focus, no motion blur</li>
+            <li class="flex gap-2"><span class="text-[var(--accent-2)]">›</span>Clean or simple backgrounds</li>
+            <li class="flex gap-2"><span class="text-[var(--accent-2)]">›</span>One clear focal subject</li>
+            <li class="flex gap-2"><span class="text-[var(--accent-2)]">›</span>Strong directional lighting</li>
+          </ul>
+        </div>
+        <div class="space-y-2">
+          <h3 class="text-sm font-semibold text-[var(--danger)] flex items-center gap-2">
+            <i class="fa-solid fa-circle-xmark"></i>What to avoid
+          </h3>
+          <ul class="text-xs text-[var(--text-dim)] space-y-1.5 leading-relaxed">
+            <li class="flex gap-2"><span class="text-[var(--muted)]">›</span>Busy, cluttered backgrounds</li>
+            <li class="flex gap-2"><span class="text-[var(--muted)]">›</span>Low resolution or pixelated images</li>
+            <li class="flex gap-2"><span class="text-[var(--muted)]">›</span>Flat, even lighting (no contrast)</li>
+            <li class="flex gap-2"><span class="text-[var(--muted)]">›</span>Many small fine details</li>
+            <li class="flex gap-2"><span class="text-[var(--muted)]">›</span>Blurry or out-of-focus shots</li>
+            <li class="flex gap-2"><span class="text-[var(--muted)]">›</span>Gradients with no clear edges</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="rounded-lg bg-[var(--surface-2)] border border-[var(--border)] p-4">
+        <h3 class="text-sm font-semibold mb-2 flex items-center gap-2">
+          <i class="fa-solid fa-wand-magic-sparkles text-[var(--accent-2)]"></i>Pro tips for great results
+        </h3>
+        <ul class="text-xs text-[var(--text-dim)] space-y-1.5 leading-relaxed">
+          <li>• Crop tightly around your subject before uploading — square crops work best</li>
+          <li>• Use the <strong>Threshold</strong> adjustment to push mid-tones to pure black/white for cleaner lines</li>
+          <li>• Start with <strong>200 nails</strong> and <strong>2500 strings</strong>, then refine</li>
+          <li>• Increase <strong>Contrast boost</strong> to 1.4–1.6 for portraits to deepen shadows</li>
+          <li>• Lower <strong>Line opacity</strong> if the result looks too dark; raise it if too faint</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="p-6 border-t border-[var(--border)] flex items-center justify-between">
+      <label class="flex items-center gap-2 text-xs text-[var(--muted)] cursor-pointer">
+        <input type="checkbox" id="dont-show-again" class="accent-[var(--accent)]">
+        Don't show this again
+      </label>
+      <button id="guidelines-continue" class="btn-primary">
+        <i class="fa-solid fa-arrow-right mr-2"></i>Choose Image
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- TOASTS -->
+<div id="toast-container" class="fixed bottom-6 right-6 z-50 space-y-2"></div>
+
+<script>
+/* ==========================================================================
+   THREADWEAVE — String Art Studio
+   Single-file string art generator with greedy line optimization.
+   ========================================================================== */
+
+// ----- Worker source code (inlined as string) -----
+const WORKER_CODE = `
+self.onmessage = function(e) {
+  const { target, width, height, settings } = e.data;
+  const { nailCount, stringCount, lineWeight, minSpacing } = settings;
+
+  const W = width, H = height;
+  const cx = W / 2, cy = H / 2;
+  const radius = Math.min(W, H) / 2 - 2;
+
+  // Build nail positions around a circle
+  const nails = new Array(nailCount);
+  for (let i = 0; i < nailCount; i++) {
+    const angle = 2 * Math.PI * i / nailCount - Math.PI / 2;
+    nails[i] = [
+      Math.round(cx + radius * Math.cos(angle)),
+      Math.round(cy + radius * Math.sin(angle))
+    ];
+  }
+
+  // Cache line pixel arrays lazily
+  const lineCache = new Map();
+  function getLine(i, j) {
+    const key = i < j ? (i * 100000 + j) : (j * 100000 + i);
+    let cached = lineCache.get(key);
+    if (cached) return cached;
+    const [x0, y0] = nails[i];
+    const [x1, y1] = nails[j];
+    // Bresenham
+    const pixels = [];
+    let x = x0, y = y0;
+    const dx = Math.abs(x1 - x0), dy = Math.abs(y1 - y0);
+    const sx = x0 < x1 ? 1 : -1;
+    const sy = y0 < y1 ? 1 : -1;
+    let err = dx - dy;
+    let safety = 0;
+    while (safety++ < 10000) {
+      pixels.push(y * W + x);
+      if (x === x1 && y === y1) break;
+      const e2 = 2 * err;
+      if (e2 > -dy) { err -= dy; x += sx; }
+      if (e2 < dx) { err += dx; y += sy; }
+    }
+    const arr = new Uint32Array(pixels);
+    lineCache.set(key, arr);
+    return arr;
+  }
+
+  // Greedy algorithm
+  const canvas = new Float32Array(W * H);
+  let currentNail = 0;
+  const sequence = [0];
+  const reportInterval = Math.max(1, Math.floor(stringCount / 60));
+  const startTime = Date.now();
+
+  for (let s = 0; s < stringCount; s++) {
+    let bestNail = -1;
+    let bestScore = 0;
+
+    for (let n = 0; n < nailCount; n++) {
+      if (n === currentNail) continue;
+      const diff = Math.abs(n - currentNail);
+      const dist = Math.min(diff, nailCount - diff);
+      if (dist < minSpacing) continue;
+
+      const pixels = getLine(currentNail, n);
+      let score = 0;
+      for (let k = 0; k < pixels.length; k++) {
+        const idx = pixels[k];
+        const t = target[idx];
+        const c = canvas[idx];
+        if (c < t) {
+          const newC = c + lineWeight <= t ? c + lineWeight : t;
+          const d1 = t - c;
+          const d2 = t - newC;
+          score += d1 * d1 - d2 * d2;
+        }
+      }
+      if (score > bestScore) {
+        bestScore = score;
+        bestNail = n;
+      }
+    }
+
+    if (bestNail === -1 || bestScore <= 0) {
+      self.postMessage({ type: 'progress', progress: 1, step: s + 1, total: stringCount });
+      break;
+    }
+
+    const pixels = getLine(currentNail, bestNail);
+    for (let k = 0; k < pixels.length; k++) {
+      const idx = pixels[k];
+      const c = canvas[idx];
+      const t = target[idx];
+      canvas[idx] = c + lineWeight <= t ? c + lineWeight : t;
+    }
+
+    sequence.push(bestNail);
+    currentNail = bestNail;
+
+    if (s % reportInterval === 0 || s === stringCount - 1) {
+      const progress = (s + 1) / stringCount;
+      const elapsed = (Date.now() - startTime) / 1000;
+      const eta = elapsed > 0 && progress > 0 ? Math.round(elapsed / progress - elapsed) : 0;
+      self.postMessage({
+        type: 'progress',
+        progress: progress,
+        step: s + 1,
+        total: stringCount,
+        eta: eta
+      });
+    }
+  }
+
+  self.postMessage({
+    type: 'done',
+    sequence: new Int32Array(sequence),
+    nails: nails,
+    canvasSize: { width: W, height: H }
+  });
+};
+`;
+
+// ----- Application State -----
+const state = {
+  originalImage: null,         // HTMLImageElement
+  originalImageData: null,     // ImageData of full original
+  adjustedTarget: null,         // Float32Array (W*H) target darkness 0-1
+  adjustedCanvas: null,         // canvas with adjusted preview
+  blurScore: 0,
+  blurThreshold: 80,
+  adjustments: { zoom: 1, brightness: 0, contrast: 0, threshold: -1, invert: false },
+  settings: {
+    nailCount: 200,
+    stringCount: 2500,
+    lineWeight: 0.12,
+    lineWidth: 1.0,
+    contrastBoost: 1.2,
+    minSpacing: 10,
+    bgColor: '#1a1813',
+    lineColor: '#e8dcc4'
+  },
+  worker: null,
+  isGenerating: false,
+  result: null,                 // { sequence, nails, canvasSize }
+  currentView: 'original',
+  hasGenerated: false,
+  computationSize: 320,
+  showGuidelines: true
+};
+
+// ----- DOM References -----
+const $ = (id) => document.getElementById(id);
+const dom = {
+  fileInput: $('file-input'),
+  dropZone: $('drop-zone'),
+  btnBrowse: $('btn-browse'),
+  btnEmptyUpload: $('btn-empty-upload'),
+  btnGuidelines: $('btn-guidelines'),
+  btnReplace: $('btn-replace'),
+  uploadArea: $('upload-area'),
+  sourceLoaded: $('source-loaded'),
+  sourceName: $('source-name'),
+  sourceDims: $('source-dims'),
+  sourceStatus: $('source-status'),
+  sourceThumb: $('source-thumb'),
+  sharpnessBadge: $('sharpness-badge'),
+  blurWarning: $('blur-warning'),
+  // adjustments
+  adjZoom: $('adj-zoom'),
+  adjBrightness: $('adj-brightness'),
+  adjContrast: $('adj-contrast'),
+  adjThreshold: $('adj-threshold'),
+  adjInvert: $('adj-invert'),
+  valZoom: $('val-zoom'),
+  valBrightness: $('val-brightness'),
+  valContrast: $('val-contrast'),
+  valThreshold: $('val-threshold'),
+  btnResetAdjust: $('btn-reset-adjust'),
+  adjustControls: $('adjust-controls'),
+  // settings
+  setNails: $('set-nails'),
+  setStrings: $('set-strings'),
+  setLineOpacity: $('set-lineopacity'),
+  setLineWidth: $('set-linewidth'),
+  setContrastBoost: $('set-contrastboost'),
+  setSpacing: $('set-spacing'),
+  valNails: $('val-nails'),
+  valStrings: $('val-strings'),
+  valLineOpacity: $('val-lineopacity'),
+  valLineWidth: $('val-linewidth'),
+  valContrastBoost: $('val-contrastboost'),
+  valSpacing: $('val-spacing'),
+  // generate
+  btnGenerate: $('btn-generate'),
+  btnGenerateText: $('btn-generate-text'),
+  genProgress: $('gen-progress'),
+  genFill: $('gen-fill'),
+  genPercent: $('gen-percent'),
+  genStep: $('gen-step'),
+  genTime: $('gen-time'),
+  btnCancel: $('btn-cancel'),
+  resultSummary: $('result-summary'),
+  statStrings: $('stat-strings'),
+  statNails: $('stat-nails'),
+  statCoverage: $('stat-coverage'),
+  statLength: $('stat-length'),
+  canvasSize: $('canvas-size'),
+  stringEstimate: $('string-estimate'),
+  // views
+  tabs: document.querySelectorAll('.tab'),
+  emptyState: $('empty-state'),
+  originalView: $('original-view'),
+  adjustedView: $('adjusted-view'),
+  resultView: $('result-view'),
+  overlayView: $('overlay-view'),
+  canvasOriginal: $('canvas-original'),
+  canvasAdjusted: $('canvas-adjusted'),
+  canvasResult: $('canvas-result'),
+  canvasOverlay: $('canvas-overlay'),
+  overlayControls: $('overlay-controls'),
+  overlaySlider: $('overlay-slider'),
+  generatingOverlay: $('generating-overlay'),
+  genStatusText: $('gen-status-text'),
+  // info bar
+  infoDims: $('info-dims'),
+  infoSharpness: $('info-sharpness'),
+  infoStatus: $('info-status'),
+  // export
+  btnExportTxt: $('btn-export-txt'),
+  btnExportJson: $('btn-export-json'),
+  btnExportSvg: $('btn-export-svg'),
+  btnDownloadPng: $('btn-download-png'),
+  btnZoomFit: $('btn-zoom-fit'),
+  // modal
+  guidelinesModal: $('guidelines-modal'),
+  closeGuidelines: $('close-guidelines'),
+  guidelinesContinue: $('guidelines-continue'),
+  dontShowAgain: $('dont-show-again'),
+  // toasts
+  toastContainer: $('toast-container'),
+  // stage indicators
+  stageDots: document.querySelectorAll('.stage-dot')
+};
+
+// =========================================================================
+// Utility — Toasts
+// =========================================================================
+function toast(message, type = 'info', duration = 3000) {
+  const colors = {
+    info: 'var(--accent-2)',
+    success: 'var(--success)',
+    warn: 'var(--warn)',
+    error: 'var(--danger)'
+  };
+  const icons = {
+    info: 'fa-circle-info',
+    success: 'fa-circle-check',
+    warn: 'fa-triangle-exclamation',
+    error: 'fa-circle-xmark'
+  };
+  const el = document.createElement('div');
+  el.className = 'toast panel px-4 py-3 flex items-center gap-3 shadow-2xl';
+  el.style.borderColor = colors[type];
+  el.style.borderLeftWidth = '3px';
+  el.innerHTML = `
+    <i class="fa-solid ${icons[type]} text-sm" style="color: ${colors[type]}"></i>
+    <span class="text-sm">${message}</span>
+  `;
+  dom.toastContainer.appendChild(el);
+  setTimeout(() => {
+    el.style.transition = 'all 0.3s';
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(8px)';
+    setTimeout(() => el.remove(), 300);
+  }, duration);
+}
+
+// =========================================================================
+// Stage indicators
+// =========================================================================
+function updateStages(stage) {
+  dom.stageDots.forEach((dot, i) => {
+    dot.classList.remove('active', 'done');
+    const s = i + 1;
+    if (s < stage) dot.classList.add('done');
+    else if (s === stage) dot.classList.add('active');
+  });
+}
+
+// =========================================================================
+// Image loading
+// =========================================================================
+function handleFile(file) {
+  if (!file || !file.type.startsWith('image/')) {
+    toast('Please choose a valid image file', 'error');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      state.originalImage = img;
+      state.originalImageData = null;
+      processOriginalImage();
+      toast('Image loaded successfully', 'success');
+    };
+    img.onerror = () => toast('Failed to load image', 'error');
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function processOriginalImage() {
+  const img = state.originalImage;
+  if (!img) return;
+
+  // Show original view
+  const canvas = dom.canvasOriginal;
+  const ctx = canvas.getContext('2d');
+
+  // Cap size for performance
+  const maxDim = 800;
+  const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+  canvas.width = Math.round(img.width * scale);
+  canvas.height = Math.round(img.height * scale);
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+  // Store original ImageData for adjustments
+  state.originalImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+  // Update source panel
+  dom.sourceName.textContent = 'Loaded image';
+  dom.sourceDims.textContent = `${img.width} × ${img.height} px`;
+  dom.uploadArea.classList.add('hidden');
+  dom.sourceLoaded.classList.remove('hidden');
+  dom.sourceStatus.textContent = 'Loaded';
+  dom.sourceStatus.style.color = 'var(--success)';
+
+  // Compute blur score
+  computeBlurScore();
+
+  // Render thumbnail
+  renderSourceThumbnail();
+
+  // Enable adjustments
+  dom.adjustControls.classList.remove('opacity-40', 'pointer-events-none');
+  dom.btnResetAdjust.disabled = false;
+
+  // Enable tabs
+  document.querySelector('.tab[data-view="adjusted"]').disabled = false;
+
+  // Update info bar
+  dom.infoDims.textContent = `${img.width} × ${img.height} px`;
+
+  // Show adjusted view (auto-switch)
+  switchView('adjusted');
+
+  // Enable generate
+  dom.btnGenerate.disabled = false;
+
+  // Update stages
+  updateStages(2);
+
+  // Apply adjustments to refresh
+  applyAdjustments();
+}
+
+function renderSourceThumbnail() {
+  if (!state.originalImage) return;
+  const c = dom.sourceThumb;
+  const ctx = c.getContext('2d');
+  const img = state.originalImage;
+  const size = 80;
+  const scale = Math.max(size / img.width, size / img.height);
+  const sw = size / scale;
+  const sh = size / scale;
+  const sx = (img.width - sw) / 2;
+  const sy = (img.height - sh) / 2;
+  c.width = size;
+  c.height = size;
+  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, size, size);
+}
+
+// =========================================================================
+// Blur detection (Laplacian variance)
+// =========================================================================
+function computeBlurScore() {
+  if (!state.originalImageData) return;
+  const { data, width, height } = state.originalImageData;
+
+  // Downsample to max 256 for speed
+  const maxDim = 256;
+  const scale = Math.min(1, maxDim / Math.max(width, height));
+  const W = Math.max(2, Math.round(width * scale));
+  const H = Math.max(2, Math.round(height * scale));
+
+  // Create downscaled grayscale
+  const gray = new Float32Array(W * H);
+  const tmpCanvas = document.createElement('canvas');
+  tmpCanvas.width = W;
+  tmpCanvas.height = H;
+  const tctx = tmpCanvas.getContext('2d');
+  tctx.drawImage(state.originalImage, 0, 0, W, H);
+  const d = tctx.getImageData(0, 0, W, H).data;
+  for (let i = 0; i < W * H; i++) {
+    gray[i] = 0.299 * d[i*4] + 0.587 * d[i*4+1] + 0.114 * d[i*4+2];
+  }
+
+  // Laplacian
+  const lap = new Float32Array(W * H);
+  for (let y = 1; y < H - 1; y++) {
+    for (let x = 1; x < W - 1; x++) {
+      const idx = y * W + x;
+      lap[idx] =
+        gray[idx - W] + gray[idx + W] + gray[idx - 1] + gray[idx + 1] - 4 * gray[idx];
+    }
+  }
+
+  // Variance
+  let mean = 0;
+  for (let i = 0; i < lap.length; i++) mean += lap[i];
+  mean /= lap.length;
+  let variance = 0;
+  for (let i = 0; i < lap.length; i++) {
+    const d2 = lap[i] - mean;
+    variance += d2 * d2;
+  }
+  variance /= lap.length;
+
+  state.blurScore = variance;
+  updateSharpnessBadge();
+}
+
+function updateSharpnessBadge() {
+  const score = state.blurScore;
+  let label, color, bg;
+  if (score > 200) {
+    label = 'Sharp';
+    color = 'var(--success)';
+    bg = 'rgba(127, 176, 105, 0.12)';
+  } else if (score > 80) {
+    label = 'Acceptable';
+    color = 'var(--accent-2)';
+    bg = 'rgba(224, 164, 88, 0.12)';
+  } else {
+    label = 'Blurry';
+    color = 'var(--danger)';
+    bg = 'rgba(201, 93, 74, 0.12)';
+  }
+  dom.sharpnessBadge.textContent = `${label} · ${score.toFixed(0)}`;
+  dom.sharpnessBadge.style.color = color;
+  dom.sharpnessBadge.style.background = bg;
+  dom.infoSharpness.textContent = `${score.toFixed(0)} sharpness`;
+
+  if (score < state.blurThreshold) {
+    dom.blurWarning.classList.remove('hidden');
+  } else {
+    dom.blurWarning.classList.add('hidden');
+  }
+}
+
+// =========================================================================
+// Adjustments
+// =========================================================================
+function applyAdjustments() {
+  if (!state.originalImageData) return;
+
+  const src = state.originalImageData;
+  const sw = src.width, sh = src.height;
+
+  // Compute square crop based on zoom
+  const zoom = state.adjustments.zoom;
+  const baseSize = Math.min(sw, sh);
+  const cropSize = Math.max(8, Math.floor(baseSize / zoom));
+  const sx = Math.floor((sw - cropSize) / 2);
+  const sy = Math.floor((sh - cropSize) / 2);
+
+  // Draw to internal computation canvas (square)
+  const COMP = state.computationSize;
+  const canvas = document.createElement('canvas');
+  canvas.width = COMP;
+  canvas.height = COMP;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, COMP, COMP);
+  ctx.drawImage(state.originalImage, sx, sy, cropSize, cropSize, 0, 0, COMP, COMP);
+
+  const imgData = ctx.getImageData(0, 0, COMP, COMP);
+  const d = imgData.data;
+
+  const { brightness, contrast, threshold, invert } = state.adjustments;
+  const cFactor = (259 * (contrast + 255)) / (255 * (259 - contrast));
+
+  // Build darkness target array (0 = white, 1 = black)
+  const target = new Float32Array(COMP * COMP);
+  for (let i = 0; i < COMP * COMP; i++) {
+    let r = d[i*4], g = d[i*4+1], b = d[i*4+2];
+
+    // Brightness
+    r += brightness; g += brightness; b += brightness;
+
+    // Contrast
+    r = cFactor * (r - 128) + 128;
+    g = cFactor * (g - 128) + 128;
+    b = cFactor * (b - 128) + 128;
+
+    // Clamp
+    r = Math.max(0, Math.min(255, r));
+    g = Math.max(0, Math.min(255, g));
+    b = Math.max(0, Math.min(255, b));
+
+    // Grayscale
+    let gray = 0.299 * r + 0.587 * g + 0.114 * b;
+
+    // Threshold
+    if (threshold >= 0) {
+      gray = gray >= threshold ? 255 : 0;
+    }
+
+    // Invert
+    if (invert) gray = 255 - gray;
+
+    // Store as darkness 0-1
+    target[i] = 1 - gray / 255;
+  }
+
+  state.adjustedTarget = target;
+
+  // Render preview to display canvas
+  renderAdjustedPreview(imgData);
+
+  // Update display values
+  dom.valZoom.textContent = `${zoom.toFixed(2)}×`;
+  dom.valBrightness.textContent = brightness;
+  dom.valContrast.textContent = contrast;
+  dom.valThreshold.textContent = threshold < 0 ? 'Off' : threshold;
+}
+
+function renderAdjustedPreview(imgData) {
+  // Apply adjustments to display canvas at higher resolution
+  if (!state.originalImageData) return;
+  const DISP = 500;
+  const c = dom.canvasAdjusted;
+  c.width = DISP;
+  c.height = DISP;
+  const ctx = c.getContext('2d');
+
+  const zoom = state.adjustments.zoom;
+  const img = state.originalImage;
+  const baseSize = Math.min(img.width, img.height);
+  const cropSize = Math.max(8, Math.floor(baseSize / zoom));
+  const sx = Math.floor((img.width - cropSize) / 2);
+  const sy = Math.floor((img.height - cropSize) / 2);
+
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, DISP, DISP);
+  ctx.drawImage(img, sx, sy, cropSize, cropSize, 0, 0, DISP, DISP);
+
+  // Apply pixel adjustments
+  const imgD = ctx.getImageData(0, 0,DISP,DISP);
+  const d = imgD.data;
+  const { brightness, contrast, threshold, invert } = state.adjustments;
+  const cFactor = (259 * (contrast + 255)) / (255 * (259 - contrast));
+  for (let i = 0; i < d.length; i += 4) {
+    let r = d[i], g = d[i+1], b = d[i+2];
+    r += brightness; g += brightness; b += brightness;
+    r = cFactor * (r - 128) + 128;
+    g = cFactor * (g - 128) + 128;
+    b = cFactor * (b - 128) + 128;
+    r = Math.max(0, Math.min(255, r));
+    g = Math.max(0, Math.min(255, g));
+    b = Math.max(0, Math.min(255, b));
+    let gray = 0.299*r + 0.587*g + 0.114*b;
+    if (threshold >= 0) gray = gray >= threshold ? 255 : 0;
+    if (invert) gray = 255 - gray;
+    d[i] = d[i+1] = d[i+2] = gray;
+  }
+  ctx.putImageData(imgD, 0, 0);
+}
+
+// =========================================================================
+// View switching
+// =========================================================================
+function switchView(view) {
+  state.currentView = view;
+  dom.tabs.forEach(t => {
+    t.classList.toggle('active', t.dataset.view === view);
+  });
+
+  dom.emptyState.classList.toggle('hidden', view !== 'empty' && state.originalImage);
+  dom.originalView.classList.toggle('hidden', view !== 'original');
+  dom.adjustedView.classList.toggle('hidden', view !== 'adjusted');
+  dom.resultView.classList.toggle('hidden', view !== 'result');
+  dom.overlayView.classList.toggle('hidden', view !== 'overlay');
+  dom.overlayControls.classList.toggle('hidden', view !== 'overlay');
+
+  if (!state.originalImage) {
+    dom.emptyState.classList.remove('hidden');
+  }
+
+  if (view === 'overlay' && state.result) {
+    renderOverlay();
+  }
+}
+
+// =========================================================================
+// Generate string art
+// =========================================================================
+function startGeneration() {
+  if (!state.adjustedTarget) {
+    toast('Please upload and adjust an image first', 'warn');
+    return;
+  }
+  if (state.isGenerating) return;
+
+  state.isGenerating = true;
+  dom.btnGenerate.disabled = true;
+  dom.btnGenerateText.textContent = 'Generating…';
+  dom.genProgress.classList.remove('hidden');
+  dom.generatingOverlay.classList.remove('hidden');
+  dom.genStatusText.textContent = 'Initializing threads…';
+  dom.infoStatus.textContent = 'Generating';
+
+  // Apply contrast boost to target
+  const COMP = state.computationSize;
+  const boosted = new Float32Array(COMP * COMP);
+  const cb = state.settings.contrastBoost;
+  for (let i = 0; i < COMP * COMP; i++) {
+    let v = state.adjustedTarget[i];
+    // Apply gamma-style contrast boost around 0.5 midpoint
+    v = Math.pow(v, cb < 1 ? 1/cb : cb);
+    boosted[i] = Math.max(0, Math.min(1, v));
+  }
+
+  // Create worker
+  const blob = new Blob([WORKER_CODE], { type: 'application/javascript' });
+  const workerUrl = URL.createObjectURL(blob);
+  state.worker = new Worker(workerUrl);
+
+  state.worker.onmessage = (e) => {
+    const msg = e.data;
+    if (msg.type === 'progress') {
+      const pct = Math.round(msg.progress * 100);
+      dom.genFill.style.width = `${pct}%`;
+      dom.genPercent.textContent = `${pct}%`;
+      dom.genStep.textContent = `Step ${msg.step} / ${msg.total}`;
+      dom.genTime.textContent = msg.eta > 0 ? `~${msg.eta}s remaining` : '';
+      if (msg.step > 5) {
+        dom.genStatusText.textContent = `Weaving thread ${msg.step} of ${msg.total}…`;
+      }
+    } else if (msg.type === 'done') {
+      state.result = {
+        sequence: Array.from(msg.sequence),
+        nails: msg.nails,
+        canvasSize: msg.canvasSize,
+        settings: { ...state.settings }
+      };
+      state.hasGenerated = true;
+      finishGeneration();
+    }
+  };
+
+  state.worker.onerror = (err) => {
+    toast('Generation failed: ' + err.message, 'error');
+    cancelGeneration();
+  };
+
+  state.worker.postMessage({
+    target: boosted,
+    width: COMP,
+    height: COMP,
+    settings: {
+      nailCount: state.settings.nailCount,
+      stringCount: state.settings.stringCount,
+      lineWeight: state.settings.lineWeight,
+      minSpacing: state.settings.minSpacing
+    }
+  });
+
+  updateStages(3);
+}
+
+function finishGeneration() {
+  state.isGenerating = false;
+  dom.generatingOverlay.classList.add('hidden');
+  dom.genProgress.classList.add('hidden');
+  dom.btnGenerate.disabled = false;
+  dom.btnGenerateText.textContent = 'Regenerate';
+  dom.infoStatus.textContent = 'Complete';
+
+  // Enable result/overlay tabs
+  document.querySelector('.tab[data-view="result"]').disabled = false;
+  document.querySelector('.tab[data-view="overlay"]').disabled = false;
+
+  // Enable exports
+  dom.btnExportTxt.disabled = false;
+  dom.btnExportJson.disabled = false;
+  dom.btnExportSvg.disabled = false;
+  dom.btnDownloadPng.disabled = false;
+
+  // Render result
+  renderResult();
+
+  // Update stats
+  updateStats();
+
+  // Show stats
+  dom.resultSummary.classList.remove('hidden');
+
+  // Switch to result view
+  switchView('result');
+
+  toast('String art generated!', 'success');
+
+  updateStages(4);
+}
+
+function cancelGeneration() {
+  if (state.worker) {
+    state.worker.terminate();
+    state.worker = null;
+  }
+  state.isGenerating = false;
+  dom.generatingOverlay.classList.add('hidden');
+  dom.genProgress.classList.add('hidden');
+  dom.btnGenerate.disabled = false;
+  dom.btnGenerateText.textContent = 'Generate String Art';
+  dom.infoStatus.textContent = 'Cancelled';
+  toast('Generation cancelled', 'warn');
+}
+
+// =========================================================================
+// Render result
+// =========================================================================
+function renderResult() {
+  if (!state.result) return;
+  const DISP = 640;
+  const c = dom.canvasResult;
+  c.width = DISP;
+  c.height = DISP;
+  const ctx = c.getContext('2d');
+
+  // Background
+  ctx.fillStyle = state.settings.bgColor;
+  ctx.fillRect(0, 0, DISP, DISP);
+
+  // Scale nails to display
+  const COMP = state.result.canvasSize.width;
+  const scale = DISP / COMP;
+  const nails = state.result.nails.map(([x, y]) => [x * scale, y * scale]);
+
+  const seq = state.result.sequence;
+  const lineWidth = state.settings.lineWidth;
+  const lineColor = state.settings.lineColor;
+
+  // Parse line color to add alpha
+  ctx.strokeStyle = lineColor;
+  ctx.lineWidth = lineWidth;
+  ctx.lineCap = 'round';
+  ctx.globalAlpha = 0.75;
+  ctx.beginPath();
+  for (let i = 0; i < seq.length - 1; i++) {
+    const a = nails[seq[i]];
+    const b = nails[seq[i + 1]];
+    ctx.moveTo(a[0], a[1]);
+    ctx.lineTo(b[0], b[1]);
+  }
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  // Draw nails
+  ctx.fillStyle = state.settings.lineColor;
+  ctx.globalAlpha = 0.9;
+  for (const [x, y] of nails) {
+    ctx.beginPath();
+    ctx.arc(x, y, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+function renderOverlay() {
+  if (!state.result || !state.originalImageData) return;
+  const DISP = 640;
+  const c = dom.canvasOverlay;
+  c.width = DISP;
+  c.height = DISP;
+  const ctx = c.getContext('2d');
+
+  // Background
+  ctx.fillStyle = state.settings.bgColor;
+  ctx.fillRect(0, 0, DISP, DISP);
+
+  // Draw adjusted image (left side based on slider)
+  const adjustedCanvas = dom.canvasAdjusted;
+  const sliderVal = parseInt(dom.overlaySlider.value);
+  const splitX = (sliderVal / 100) * DISP;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, 0, splitX, DISP);
+  ctx.clip();
+  // Draw the adjusted image scaled to DISP
+  const img = state.originalImage;
+  const zoom = state.adjustments.zoom;
+  const baseSize = Math.min(img.width, img.height);
+  const cropSize = Math.max(8, Math.floor(baseSize / zoom));
+  const sx = Math.floor((img.width - cropSize) / 2);
+  const sy = Math.floor((img.height - cropSize) / 2);
+  ctx.drawImage(img, sx, sy, cropSize, cropSize, 0, 0, DISP, DISP);
+  ctx.restore();
+
+  // Draw result (right side)
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(splitX, 0, DISP - splitX, DISP);
+  ctx.clip();
+  ctx.fillStyle = state.settings.bgColor;
+  ctx.fillRect(0, 0, DISP, DISP);
+  const COMP = state.result.canvasSize.width;
+  const scale = DISP / COMP;
+  const nails = state.result.nails.map(([x, y]) => [x * scale, y * scale]);
+  const seq = state.result.sequence;
+  ctx.strokeStyle = state.settings.lineColor;
+  ctx.lineWidth = state.settings.lineWidth;
+  ctx.lineCap = 'round';
+  ctx.globalAlpha = 0.75;
+  ctx.beginPath();
+  for (let i = 0; i < seq.length - 1; i++) {
+    const a = nails[seq[i]];
+    const b = nails[seq[i + 1]];
+    ctx.moveTo(a[0], a[1]);
+    ctx.lineTo(b[0], b[1]);
+  }
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  ctx.restore();
+
+  // Divider line
+  ctx.strokeStyle = 'rgba(217, 119, 87, 0.8)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(splitX, 0);
+  ctx.lineTo(splitX, DISP);
+  ctx.stroke();
+}
+
+// =========================================================================
+// Stats
+// =========================================================================
+function updateStats() {
+  if (!state.result) return;
+  const seq = state.result.sequence;
+  const nails = state.result.nails;
+  const COMP = state.result.canvasSize.width;
+
+  dom.statStrings.textContent = (seq.length - 1).toLocaleString();
+  dom.statNails.textContent = nails.length;
+
+  // Coverage = unique nails used / total nails
+  const used = new Set(seq);
+  const coverage = (used.size / nails.length * 100).toFixed(1);
+  dom.statCoverage.textContent = `${coverage}%`;
+
+  // Total line length in canvas units
+  let totalLen = 0;
+  for (let i = 0; i < seq.length - 1; i++) {
+    const [x1, y1] = nails[seq[i]];
+    const [x2, y2] = nails[seq[i + 1]];
+    totalLen += Math.hypot(x2 - x1, y2 - y1);
+  }
+  // In canvas diameters
+  const diameters = (totalLen / COMP).toFixed(1);
+  dom.statLength.textContent = `${diameters}×`;
+
+  // Physical estimate
+  updateStringLength();
+}
+
+function updateStringLength() {
+  if (!state.result) return;
+  const seq = state.result.sequence;
+  const nails = state.result.nails;
+  const COMP = state.result.canvasSize.width;
+  const canvasCm = parseFloat(dom.canvasSize.value) || 50;
+
+  let totalLen = 0;
+  for (let i = 0; i < seq.length - 1; i++) {
+    const [x1, y1] = nails[seq[i]];
+    const [x2, y2] = nails[seq[i + 1]];
+    totalLen += Math.hypot(x2 - x1, y2 - y1);
+  }
+  const pixelsPerCm = COMP / canvasCm;
+  const lengthCm = totalLen / pixelsPerCm;
+  const lengthM = (lengthCm / 100).toFixed(1);
+  dom.stringEstimate.textContent = `≈ ${lengthM} m`;
+}
+
+// =========================================================================
+// Export
+// =========================================================================
+function exportTXT() {
+  if (!state.result) return;
+  const seq = state.result.sequence;
+  const nails = state.result.nails;
+  const s = state.settings;
+
+  const lines = [];
+  lines.push('THREADWEAVE STRING ART — PIN SEQUENCE');
+  lines.push('=====================================');
+  lines.push('');
+  lines.push(`Nail count:     ${nails.length}`);
+  lines.push(`String count:   ${seq.length - 1}`);
+  lines.push(`Canvas size:    ${dom.canvasSize.value} cm diameter`);
+  lines.push(`Background:     ${s.bgColor}`);
+  lines.push(`Line color:     ${s.lineColor}`);
+  lines.push(`Line weight:    ${s.lineWeight}`);
+  lines.push(`Line width:     ${s.lineWidth} px`);
+  lines.push('');
+  lines.push('NAIL POSITIONS (index: x, y in canvas units):');
+  lines.push('---------------------------------------------');
+  nails.forEach(([x, y], i) => {
+    lines.push(`${i}: ${x}, ${y}`);
+  });
+  lines.push('');
+  lines.push('THREAD SEQUENCE (nail indices, in order):');
+  lines.push('-----------------------------------------');
+  // Chunk sequence into rows of 20
+  for (let i = 0; i < seq.length; i += 20) {
+    lines.push(seq.slice(i, i + 20).join(' → '));
+  }
+  lines.push('');
+  lines.push('=====================================');
+  lines.push('End of sequence');
+
+  downloadFile(lines.join('\n'), 'threadweave-sequence.txt', 'text/plain');
+  toast('TXT sequence downloaded', 'success');
+}
+
+function exportJSON() {
+  if (!state.result) return;
+  const seq = state.result.sequence;
+  const nails = state.result.nails;
+  const s = state.settings;
+
+  const data = {
+    metadata: {
+      generator: 'Threadweave String Art Studio',
+      version: '1.0.0',
+      createdAt: new Date().toISOString(),
+      canvasDiameterCm: parseFloat(dom.canvasSize.value) || 50
+    },
+    settings: {
+      nailCount: nails.length,
+      stringCount: seq.length - 1,
+      lineWeight: s.lineWeight,
+      lineWidth: s.lineWidth,
+      contrastBoost: s.contrastBoost,
+      minSpacing: s.minSpacing,
+      backgroundColor: s.bgColor,
+      lineColor: s.lineColor
+    },
+    canvas: {
+      width: state.result.canvasSize.width,
+      height: state.result.canvasSize.height,
+      nailCoordinates: nails.map(([x, y]) => ({ x, y }))
+    },
+    sequence: seq,
+    stats: {
+      uniqueNailsUsed: new Set(seq).size,
+      totalStrings: seq.length - 1
+    }
+  };
+
+  downloadFile(JSON.stringify(data, null, 2), 'threadweave-sequence.json', 'application/json');
+  toast('JSON sequence downloaded', 'success');
+}
+
+function exportSVG() {
+  if (!state.result) return;
+  const seq = state.result.sequence;
+  const nails = state.result.nails;
+  const s = state.settings;
+  const SIZE = 1000;
+  const COMP = state.result.canvasSize.width;
+  const scale = SIZE / COMP;
+  const scaledNails = nails.map(([x, y]) => [x * scale, y * scale]);
+
+  let svg = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+  svg += `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${SIZE} ${SIZE}" width="${SIZE}" height="${SIZE}">\n`;
+  svg += `  <rect width="${SIZE}" height="${SIZE}" fill="${s.bgColor}"/>\n`;
+  svg += `  <g stroke="${s.lineColor}" stroke-width="${s.lineWidth * scale / 2}" stroke-linecap="round" opacity="0.75" fill="none">\n`;
+
+  // Build path
+  let pathData = '';
+  for (let i = 0; i < seq.length - 1; i++) {
+    const [x1, y1] = scaledNails[seq[i]];
+    const [x2, y2] = scaledNails[seq[i + 1]];
+    pathData += `M${x1.toFixed(1)},${y1.toFixed(1)}L${x2.toFixed(1)},${y2.toFixed(1)}`;
+  }
+  svg += `    <path d="${pathData}"/>\n`;
+  svg += `  </g>\n`;
+  svg += `  <g fill="${s.lineColor}">\n`;
+  scaledNails.forEach(([x, y]) => {
+    svg += `    <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2"/>\n`;
+  });
+  svg += `  </g>\n`;
+  svg += `</svg>`;
+
+  downloadFile(svg, 'threadweave-art.svg', 'image/svg+xml');
+  toast('SVG file downloaded', 'success');
+}
+
+function exportPNG() {
+  if (!state.result) return;
+  const c = dom.canvasResult;
+  c.toBlob((blob) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'threadweave-art.png';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    toast('PNG image downloaded', 'success');
+  }, 'image/png');
+}
+
+function downloadFile(content, filename, type) {
+  const blob = content instanceof Blob ? content : new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// =========================================================================
+// Event listeners
+// =========================================================================
+function setupListeners() {
+  // Upload
+  dom.btnBrowse.addEventListener('click', () => openFilePicker());
+  dom.btnEmptyUpload.addEventListener('click', () => openFilePicker());
+  dom.dropZone.addEventListener('click', () => openFilePicker());
+  dom.btnReplace.addEventListener('click', () => openFilePicker());
+
+  function openFilePicker() {
+    if (state.showGuidelines) {
+      dom.guidelinesModal.classList.remove('hidden');
+    } else {
+      dom.fileInput.click();
+    }
+  }
+
+  dom.fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) handleFile(file);
+    e.target.value = '';
+  });
+
+  // Drag and drop
+  dom.dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dom.dropZone.classList.add('dragover');
+  });
+  dom.dropZone.addEventListener('dragleave', () => {
+    dom.dropZone.classList.remove('dragover');
+  });
+  dom.dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dom.dropZone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  });
+
+  // Guidelines modal
+  dom.btnGuidelines.addEventListener('click', () => {
+    dom.guidelinesModal.classList.remove('hidden');
+  });
+  dom.closeGuidelines.addEventListener('click', () => {
+    dom.guidelinesModal.classList.add('hidden');
+  });
+  dom.guidelinesContinue.addEventListener('click', () => {
+    if (dom.dontShowAgain.checked) state.showGuidelines = false;
+    dom.guidelinesModal.classList.add('hidden');
+    dom.fileInput.click();
+  });
+  dom.guidelinesModal.addEventListener('click', (e) => {
+    if (e.target === dom.guidelinesModal) {
+      dom.guidelinesModal.classList.add('hidden');
+    }
+  });
+
+  // Adjustments
+  dom.adjZoom.addEventListener('input', (e) => {
+    state.adjustments.zoom = parseFloat(e.target.value);
+    applyAdjustments();
+  });
+  dom.adjBrightness.addEventListener('input', (e) => {
+    state.adjustments.brightness = parseInt(e.target.value);
+    applyAdjustments();
+  });
+  dom.adjContrast.addEventListener('input', (e) => {
+    state.adjustments.contrast = parseInt(e.target.value);
+    applyAdjustments();
+  });
+  dom.adjThreshold.addEventListener('input', (e) => {
+    state.adjustments.threshold = parseInt(e.target.value);
+    applyAdjustments();
+  });
+  dom.adjInvert.addEventListener('click', () => {
+    state.adjustments.invert = !state.adjustments.invert;
+    dom.adjInvert.classList.toggle('on', state.adjustments.invert);
+    dom.adjInvert.setAttribute('aria-checked', state.adjustments.invert);
+    applyAdjustments();
+  });
+  dom.adjInvert.addEventListener('keydown', (e) => {
+    if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      dom.adjInvert.click();
+    }
+  });
+  dom.btnResetAdjust.addEventListener('click', () => {
+    state.adjustments = { zoom: 1, brightness: 0, contrast: 0, threshold: -1, invert: false };
+    dom.adjZoom.value = 1;
+    dom.adjBrightness.value = 0;
+    dom.adjContrast.value = 0;
+    dom.adjThreshold.value = -1;
+    dom.adjInvert.classList.remove('on');
+    applyAdjustments();
+    toast('Adjustments reset', 'info');
+  });
+
+  // Settings
+  dom.setNails.addEventListener('input', (e) => {
+    state.settings.nailCount = parseInt(e.target.value);
+    dom.valNails.textContent = state.settings.nailCount;
+  });
+  dom.setStrings.addEventListener('input', (e) => {
+    state.settings.stringCount = parseInt(e.target.value);
+    dom.valStrings.textContent = state.settings.stringCount;
+  });
+  dom.setLineOpacity.addEventListener('input', (e) => {
+    state.settings.lineWeight = parseFloat(e.target.value);
+    dom.valLineOpacity.textContent = state.settings.lineWeight.toFixed(2);
+  });
+  dom.setLineWidth.addEventListener('input', (e) => {
+    state.settings.lineWidth = parseFloat(e.target.value);
+    dom.valLineWidth.textContent = `${state.settings.lineWidth.toFixed(1)} px`;
+  });
+  dom.setContrastBoost.addEventListener('input', (e) => {
+    state.settings.contrastBoost = parseFloat(e.target.value);
+    dom.valContrastBoost.textContent = `${state.settings.contrastBoost.toFixed(2)}×`;
+  });
+  dom.setSpacing.addEventListener('input', (e) => {
+    state.settings.minSpacing = parseInt(e.target.value);
+    dom.valSpacing.textContent = `${state.settings.minSpacing} nails`;
+  });
+
+  // Color swatches
+  document.querySelectorAll('.color-swatch').forEach(sw => {
+    sw.addEventListener('click', () => {
+      document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+      sw.classList.add('selected');
+      state.settings.bgColor = sw.dataset.bg;
+      state.settings.lineColor = sw.dataset.line;
+      if (state.result) {
+        renderResult();
+        if (state.currentView === 'overlay') renderOverlay();
+      }
+    });
+  });
+
+  // Generate
+  dom.btnGenerate.addEventListener('click', startGeneration);
+  dom.btnCancel.addEventListener('click', cancelGeneration);
+
+  // Tabs
+  dom.tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      if (!tab.disabled) switchView(tab.dataset.view);
+    });
+  });
+
+  // Overlay slider
+  dom.overlaySlider.addEventListener('input', () => {
+    if (state.currentView === 'overlay') renderOverlay();
+  });
+
+  // Canvas size
+  dom.canvasSize.addEventListener('input', updateStringLength);
+
+  // Exports
+  dom.btnExportTxt.addEventListener('click', exportTXT);
+  dom.btnExportJson.addEventListener('click', exportJSON);
+  dom.btnExportSvg.addEventListener('click', exportSVG);
+  dom.btnDownloadPng.addEventListener('click', exportPNG);
+
+  // Zoom fit (just re-renders current view)
+  dom.btnZoomFit.addEventListener('click', () => {
+    if (state.currentView === 'result') renderResult();
+    else if (state.currentView === 'overlay') renderOverlay();
+    else if (state.currentView === 'adjusted') applyAdjustments();
+    else if (state.originalImageData) {
+      const c = dom.canvasOriginal;
+      const img = state.originalImage;
+      const maxDim = 800;
+      const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+      c.width = Math.round(img.width * scale);
+      c.height = Math.round(img.height * scale);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    }
+  });
+
+  // Keyboard
+  document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT') return;
+    if (e.key === 'Escape' && !dom.guidelinesModal.classList.contains('hidden')) {
+      dom.guidelinesModal.classList.add('hidden');
+    }
+    if (e.key === '1' && !document.querySelector('.tab[data-view="original"]').disabled) switchView('original');
+    if (e.key === '2' && !document.querySelector('.tab[data-view="adjusted"]').disabled) switchView('adjusted');
+    if (e.key === '3' && !document.querySelector('.tab[data-view="result"]').disabled) switchView('result');
+    if (e.key === '4' && !document.querySelector('.tab[data-view="overlay"]').disabled) switchView('overlay');
+  });
+}
+
+// =========================================================================
+// Init
+// =========================================================================
+function init() {
+  setupListeners();
+  switchView('empty');
+  updateStages(1);
+
+  // Check reduced motion
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.body.classList.add('reduced-motion');
+  }
+
+  // Show guidelines on first load
+  setTimeout(() => {
+    if (state.showGuidelines) {
+      // Don't auto-show; let user click upload first
+    }
+  }, 500);
+}
+
+init();
+</script>
+</body>
+</html>
